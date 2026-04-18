@@ -4,7 +4,9 @@ import io
 import re
 from contextlib import redirect_stdout
 
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+os.chdir(PROJECT_ROOT)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +19,11 @@ app = FastAPI(title="Multi-Agent AI System API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "*"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -87,6 +93,55 @@ async def handle_query(req: QueryRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+from fastapi.responses import StreamingResponse
+import json
+import asyncio
+
+@app.post("/api/stream")
+async def handle_stream(req: QueryRequest):
+    if not req.query.strip():
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+
+    async def event_generator():
+        initial_state = {
+            "query": req.query,
+            "tool": "general",
+            "city": "",
+            "expression": "",
+            "symbol": "",
+            "tool_output": {},
+            "answer": ""
+        }
+        
+        from src.main import graph
+        
+        try:
+            # astream_events provides granular token-level and node-level events
+            async for event in graph.astream_events(initial_state, version="v2"):
+                kind = event["event"]
+                
+                # Check for model tokens (the 'typing' effect)
+                if kind == "on_chat_model_stream":
+                    content = event["data"]["chunk"].content
+                    if content:
+                        # Include node name so frontend knows who is talking
+                        node_name = event["metadata"].get("langgraph_node", "unknown")
+                        yield f"event: token\ndata: {json.dumps({'text': content, 'node': node_name})}\n\n"
+                
+                # Check for node completions (for the execution trace)
+                elif kind == "on_chain_end" and "langgraph_node" in event["metadata"]:
+                    node_name = event["metadata"]["langgraph_node"]
+                    # We send the final state of that node as data
+                    yield f"event: node\ndata: {json.dumps({'node': node_name, 'output': event['data']['output']})}\n\n"
+
+            yield "event: end\ndata: {}\n\n"
+            
+        except Exception as e:
+            yield f"event: error\ndata: {json.dumps({'detail': str(e)})}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -94,4 +149,4 @@ async def health():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)

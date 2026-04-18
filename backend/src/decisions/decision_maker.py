@@ -12,7 +12,7 @@ Your sole responsibility is to analyze the user input and dispatch it to the cor
 ### EXTRACTION RULES
 - **city**: Extract the primary geographical location. Standardize to "City, Country" if possible (e.g., "Karachi, Pakistan"). Set to null if not found.
 - **expression**: Extract the raw mathematical string (e.g., "500 * 1.15"). Set to null if not found.
-- **symbol**: Extract the full name or ticker of the cryptocurrency (e.g., "bitcoin" or "solana"). Set to null if not found.
+- **symbol**: Extract the cryptocurrency name or ticker. Prefer full names (e.g., "bitcoin") for higher precision. Set to null if not found.
 
 ### OUTPUT FORMAT
 You must return a raw JSON object. Do not include markdown code blocks, preambles, or post-scripts.

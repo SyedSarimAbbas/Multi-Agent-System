@@ -1,120 +1,118 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useState, useEffect } from 'react'
+import Sidebar from './components/Sidebar'
+import ChatWindow from './components/ChatWindow'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('mas-theme') || 'dark'
+  })
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [lastAgent, setLastAgent] = useState(null)
+  const [sessions, setSessions] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('mas-sessions') || '[]')
+    } catch {
+      return []
+    }
+  })
+  const [activeSessionId, setActiveSessionId] = useState(() => {
+    return sessions.length > 0 ? sessions[0].id : null
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('mas-theme', theme)
+  }, [theme])
+
+  useEffect(() => {
+    localStorage.setItem('mas-sessions', JSON.stringify(sessions))
+  }, [sessions])
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark')
+  }
+
+  const createSession = () => {
+    const newSession = {
+      id: Date.now().toString(),
+      title: 'New Chat',
+      messages: [],
+      createdAt: new Date().toISOString(),
+    }
+    setSessions(prev => [newSession, ...prev])
+    setActiveSessionId(newSession.id)
+    setSidebarOpen(false)
+    return newSession
+  }
+
+  const updateSessionMessages = (sessionId, messages) => {
+    setSessions(prev => prev.map(s => {
+      if (s.id !== sessionId) return s
+      const title = messages.find(m => m.role === 'user')?.content?.slice(0, 40) || 'New Chat'
+      return { ...s, messages, title }
+    }))
+  }
+
+  const deleteSession = (sessionId) => {
+    setSessions(prev => prev.filter(s => s.id !== sessionId))
+    if (activeSessionId === sessionId) {
+      const remaining = sessions.filter(s => s.id !== sessionId)
+      setActiveSessionId(remaining.length > 0 ? remaining[0].id : null)
+    }
+  }
+
+  const activeSession = sessions.find(s => s.id === activeSessionId)
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-layout">
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        lastAgent={lastAgent}
+        sessions={sessions}
+        activeSessionId={activeSessionId}
+        onSelectSession={(id) => { setActiveSessionId(id); setSidebarOpen(false) }}
+        onNewChat={createSession}
+        onDeleteSession={deleteSession}
+      />
 
-      <div className="ticks"></div>
+      <main className="main-content">
+        <header className="main-header">
+          <button
+            className="menu-toggle"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <div className="header-title">
+            <h1>Multi-Agent System</h1>
+            <span className="header-badge">LangGraph</span>
+          </div>
+        </header>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <ChatWindow
+          session={activeSession}
+          onCreateSession={createSession}
+          onUpdateMessages={(msgs) => {
+            const sid = activeSessionId || createSession().id
+            updateSessionMessages(sid, msgs)
+          }}
+          onAgentUsed={setLastAgent}
+        />
+      </main>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      {sidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
+    </div>
   )
 }
 

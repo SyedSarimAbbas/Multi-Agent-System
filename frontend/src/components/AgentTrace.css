@@ -1,0 +1,66 @@
+.agent-trace {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--bg-trace);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  animation: fadeInUp 0.2s ease;
+}
+
+.trace-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.trace-steps {
+  display: flex;
+  flex-direction: column;
+}
+
+.trace-step {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-left: 4px;
+  padding-bottom: 8px;
+}
+
+.trace-step:last-child {
+  padding-bottom: 0;
+}
+
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  margin-top: 5px;
+  position: relative;
+  z-index: 1;
+}
+
+.step-line {
+  position: absolute;
+  left: 7.5px;
+  top: 14px;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-primary);
+}
+
+.step-text {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  word-break: break-all;
+}

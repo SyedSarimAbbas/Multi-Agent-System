@@ -7,7 +7,7 @@ load_dotenv()
 llm = ChatGroq(
     model = "llama-3.1-8b-instant",
     temperature = 0.5,
-    max_tokens = 1024,
+    max_tokens = int(os.getenv("MAX_TOKENS", 256)),
     api_key = os.getenv("GROQ_API_KEY"),
     streaming= True
 )

@@ -46,24 +46,35 @@ def crypto_node(state: State):
 
 def general_node(state: State):
     """ Handles general queries using LLM directly """
-    print("[Node: General] Generating direct response...")
-    prompt = f"User asked: {state['query']}\nPlease provide a helpful and professional answer."
+    print("[Node: General] Generating detailed response...")
+    prompt = f"""
+    You are an expert AI Assistant. The user asked: {state['query']}
+    
+    Please provide a comprehensive, detailed, and professional answer. 
+    - Use bullet points or numbered lists if appropriate.
+    - Add context or background information where helpful.
+    - Ensure the tone is helpful and authoritative.
+    - Use Markdown formatting for readability.
+    """
     response = get_response(prompt)
     return {"answer": response}
 
 def responder_node(state: State):
-    """ Synthesizes tool output into a natural response """
-    print("[Node: Responder] Formatting final answer...")
+    """ Synthesizes tool output into a deep, insightful response """
+    print("[Node: Responder] Synthesizing final detailed answer...")
     if state.get("answer"):
         return state
         
     tool_data = state.get("tool_output", {})
     prompt = f"""
     The user asked: {state['query']}
-    The tool returned: {tool_data}
+    The technical tool data returned: {tool_data}
     
-    Please provide a concise, friendly natural language response based on this data. 
-    Standard units: Celsius for temperature, USD for prices.
+    As an expert analyst, please provide a detailed natural language response based on this data.
+    - Don't just state the numbers; provide a brief insight or comparison if possible.
+    - Use Markdown (bolding, lists) to highlight key data points.
+    - Keep standard units: Celsius for temperature, USD for prices.
+    - Ensure the response feels human-like, professional, and thorough.
     """
     response = get_response(prompt)
     return {"answer": response}
