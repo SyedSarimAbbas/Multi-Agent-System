@@ -36,6 +36,7 @@ if os.path.exists("graph.png"):
 
 class QueryRequest(BaseModel):
     query: str
+    max_tokens: int = os.getenv("MAX_TOKENS", 256)
 
 
 class QueryResponse(BaseModel):
@@ -116,6 +117,7 @@ async def handle_stream(req: QueryRequest):
         from src.main import graph
         
         try:
+            token_count = 0
             # astream_events provides granular token-level and node-level events
             async for event in graph.astream_events(initial_state, version="v2"):
                 kind = event["event"]
@@ -126,7 +128,19 @@ async def handle_stream(req: QueryRequest):
                     if content:
                         # Include node name so frontend knows who is talking
                         node_name = event["metadata"].get("langgraph_node", "unknown")
+                        
+                        if node_name in ["responder", "general"]:
+                            if token_count >= req.max_tokens:
+                                continue
+                            token_count += 1
+                            
                         yield f"event: token\ndata: {json.dumps({'text': content, 'node': node_name})}\n\n"
+                        
+                        # Stop if we hit the limit
+                        if node_name in ["responder", "general"] and token_count >= req.max_tokens:
+                            yield f"event: token\ndata: {json.dumps({'text': '... [Token limit reached]', 'node': node_name})}\n\n"
+                            yield "event: end\ndata: {}\n\n"
+                            return
                 
                 # Check for node completions (for the execution trace)
                 elif kind == "on_chain_end" and "langgraph_node" in event["metadata"]:

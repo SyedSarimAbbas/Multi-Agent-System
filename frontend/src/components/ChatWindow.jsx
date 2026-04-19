@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import MessageBubble from './MessageBubble'
 import ChatInput from './ChatInput'
-import { sendQuery } from '../services/api'
+import { sendQuery, streamQuery } from '../services/api'
 import './ChatWindow.css'
 
 const AGENT_LABELS = {
@@ -41,7 +41,7 @@ function ChatWindow({ session, onCreateSession, onUpdateMessages, onAgentUsed })
     }, 1800)
   }
 
-  const handleSend = async (text) => {
+  const handleSend = async (text, maxTokens = 100) => {
     if (!text.trim() || loading) return
 
     if (!session) {
@@ -72,7 +72,7 @@ function ChatWindow({ session, onCreateSession, onUpdateMessages, onAgentUsed })
     }
 
     try {
-      await streamQuery(text, ({ event, data }) => {
+      await streamQuery(text, maxTokens, ({ event, data }) => {
         if (event === 'token') {
           const { text: token, node } = data
           

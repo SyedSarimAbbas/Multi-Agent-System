@@ -3,6 +3,7 @@ import './ChatInput.css'
 
 function ChatInput({ onSend, disabled }) {
   const [value, setValue] = useState('')
+  const [maxTokens, setMaxTokens] = useState(100)
   const textareaRef = useRef(null)
 
   useEffect(() => {
@@ -14,7 +15,7 @@ function ChatInput({ onSend, disabled }) {
 
   const handleSubmit = () => {
     if (!value.trim() || disabled) return
-    onSend(value.trim())
+    onSend(value.trim(), maxTokens)
     setValue('')
   }
 
@@ -27,6 +28,21 @@ function ChatInput({ onSend, disabled }) {
 
   return (
     <div className="chat-input-wrapper">
+      <div className="chat-input-tools">
+         <span>Token Limit: </span>
+         <select 
+            value={maxTokens} 
+            onChange={(e) => setMaxTokens(Number(e.target.value))}
+            disabled={disabled}
+            className="token-select"
+         >
+            <option value={50}>50</option>
+            <option value={100}>100 (Default)</option>
+            <option value={200}>200</option>
+            <option value={500}>500</option>
+            <option value={1000}>1000</option>
+         </select>
+      </div>
       <div className="chat-input-container">
         <textarea
           ref={textareaRef}

@@ -46,14 +46,14 @@ def crypto_node(state: State):
 
 def general_node(state: State):
     """ Handles general queries using LLM directly """
-    print("[Node: General] Generating detailed response...")
+    print("[Node: General] Generating concise response...")
     prompt = f"""
     You are an expert AI Assistant. The user asked: {state['query']}
     
-    Please provide a comprehensive, detailed, and professional answer. 
-    - Use bullet points or numbered lists if appropriate.
-    - Add context or background information where helpful.
-    - Ensure the tone is helpful and authoritative.
+    Provide a direct, concise, and professional answer. 
+    - Avoid long-winded introductions or filler text.
+    - Get straight to the point.
+    - Use bullet points if it helps keep the answer brief and organized.
     - Use Markdown formatting for readability.
     """
     response = get_response(prompt)
@@ -61,7 +61,7 @@ def general_node(state: State):
 
 def responder_node(state: State):
     """ Synthesizes tool output into a deep, insightful response """
-    print("[Node: Responder] Synthesizing final detailed answer...")
+    print("[Node: Responder] Synthesizing concise answer...")
     if state.get("answer"):
         return state
         
@@ -70,11 +70,11 @@ def responder_node(state: State):
     The user asked: {state['query']}
     The technical tool data returned: {tool_data}
     
-    As an expert analyst, please provide a detailed natural language response based on this data.
-    - Don't just state the numbers; provide a brief insight or comparison if possible.
-    - Use Markdown (bolding, lists) to highlight key data points.
+    As an expert analyst, provide a brief, direct, and natural language response based on this data.
+    - Do not add unnecessary conversational filler or preamble.
+    - State the requested information clearly and concisely.
+    - Use Markdown (bolding) to highlight key data points.
     - Keep standard units: Celsius for temperature, USD for prices.
-    - Ensure the response feels human-like, professional, and thorough.
     """
     response = get_response(prompt)
     return {"answer": response}

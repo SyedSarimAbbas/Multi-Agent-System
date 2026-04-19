@@ -15,11 +15,11 @@ export async function sendQuery(query) {
   return res.json();
 }
 
-export async function streamQuery(query, onUpdate) {
+export async function streamQuery(query, maxTokens, onUpdate) {
   const response = await fetch(`${API_BASE}/api/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query, max_tokens: maxTokens }),
   });
 
   if (!response.ok) {
